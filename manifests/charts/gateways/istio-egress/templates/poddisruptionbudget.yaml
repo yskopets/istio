@@ -9,7 +9,11 @@ metadata:
 {{ $gateway.labels | toYaml | trim | indent 4 }}
     release: {{ .Release.Name }}
 spec:
+{{- if and $gateway.autoscaleEnabled}}
+  minAvailable: 2
+{{- else}}
   minAvailable: 1
+{{- end}}
   selector:
     matchLabels:
 {{ $gateway.labels | toYaml | trim | indent 6 }}

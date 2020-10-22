@@ -8,7 +8,11 @@ metadata:
     app: istiocoredns
     release: {{ .Release.Name }}
 spec:
+{{- if and $gateway.autoscaleEnabled}}
+  minAvailable: 2
+{{- else}}
   minAvailable: 1
+{{- end}}
   selector:
     matchLabels:
       app: istiocoredns

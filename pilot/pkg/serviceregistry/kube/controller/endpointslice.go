@@ -106,7 +106,7 @@ func sliceServiceInstances(c *Controller, ep *discovery.EndpointSlice, proxy *mo
 		return out
 	}
 
-	podIP := proxy.IPAddresses[0]
+	podIP := proxy.IdentityIP()
 	pod := c.pods.getPodByIP(podIP)
 	builder := NewEndpointBuilder(c, pod)
 

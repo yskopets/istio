@@ -245,7 +245,7 @@ func setConnectMeta(c *config.Config, controller string, con *Connection) {
 func workloadEntryFromGroup(name string, proxy *model.Proxy, groupCfg *config.Config) *config.Config {
 	group := groupCfg.Spec.(*v1alpha3.WorkloadGroup)
 	entry := group.Template.DeepCopy()
-	entry.Address = proxy.IPAddresses[0]
+	entry.Address = proxy.IdentityIP()
 	// TODO move labels out of entry
 	entry.Labels = mergeLabels(entry.Labels, proxy.Metadata.Labels)
 
@@ -294,7 +294,7 @@ func autoregisteredWorkloadEntryName(proxy *model.Proxy) string {
 		adsLog.Errorf("auto-registration of %v failed: missing namespace", proxy.ID)
 		return ""
 	}
-	p := []string{proxy.Metadata.AutoRegisterGroup, proxy.IPAddresses[0]}
+	p := []string{proxy.Metadata.AutoRegisterGroup, proxy.IdentityIP()}
 	if proxy.Metadata.Network != "" {
 		p = append(p, proxy.Metadata.Network)
 	}

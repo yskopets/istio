@@ -718,7 +718,7 @@ func (s *DiscoveryServer) ProxyUpdate(clusterID, ip string) {
 
 	s.adsClientsMutex.RLock()
 	for _, v := range s.adsClients {
-		if v.proxy.Metadata.ClusterID == clusterID && v.proxy.IPAddresses[0] == ip {
+		if v.proxy.Metadata.ClusterID == clusterID && v.proxy.IdentityIP() == ip {
 			connection = v
 			break
 		}

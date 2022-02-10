@@ -98,7 +98,6 @@ func (i *index) Delete(wi *model.WorkloadInstance) *model.WorkloadInstance {
 	if previous != nil {
 		i.ipToKeys.Delete(previous.Endpoint.Address, key)
 	}
-	i.ipToKeys.Delete(wi.Endpoint.Address, key)
 	delete(i.keyToInstance, key)
 	return previous
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package autoregistration
+package workloadentry
 
 import (
 	"fmt"
@@ -33,6 +33,8 @@ import (
 	"istio.io/istio/pilot/pkg/model"
 	"istio.io/istio/pilot/pkg/model/status"
 	"istio.io/istio/pilot/pkg/networking/util"
+	"istio.io/istio/pilot/pkg/workloadentry/internal/autoregistration"
+	workloadentrystore "istio.io/istio/pilot/pkg/workloadentry/internal/store"
 	"istio.io/istio/pkg/config"
 	"istio.io/istio/pkg/config/schema/collections"
 	"istio.io/istio/pkg/config/schema/gvk"
@@ -288,15 +290,15 @@ func TestWorkloadEntryFromGroup(t *testing.T) {
 			Namespace:        proxy.Metadata.Namespace,
 			Labels:           wantLabels,
 			Annotations: map[string]string{
-				AutoRegistrationGroupAnnotation: group.Name,
-				"foo":                           "bar",
+				autoregistration.AutoRegistrationGroupAnnotation: group.Name,
+				"foo": "bar",
 			},
 			OwnerReferences: []metav1.OwnerReference{{
 				APIVersion: group.GroupVersionKind.GroupVersion(),
 				Kind:       group.GroupVersionKind.Kind,
 				Name:       group.Name,
 				UID:        kubetypes.UID(group.UID),
-				Controller: &workloadGroupIsController,
+				Controller: &autoregistration.WorkloadGroupIsController,
 			}},
 		},
 		Spec: &v1alpha3.WorkloadEntry{
@@ -312,7 +314,7 @@ func TestWorkloadEntryFromGroup(t *testing.T) {
 		},
 	}
 
-	got := workloadEntryFromGroup("test-we", proxy, &group)
+	got := autoregistration.WorkloadEntryFromGroup("test-we", proxy, &group)
 	assert.Equal(t, got, &want)
 }
 
@@ -416,11 +418,11 @@ func TestNonAutoregisteredWorkloads_SuitableForHealthChecks_ShouldBeTreatedAsCon
 			if wle == nil {
 				t.Fatalf("WorkloadEntry %s/%s must exist", we.Namespace, we.Name)
 			}
-			if diff := cmp.Diff("pilot-x", wle.Annotations[WorkloadControllerAnnotation]); diff != "" {
-				t.Fatalf("WorkloadEntry should have been annotated with %q: %v", WorkloadControllerAnnotation, diff)
+			if diff := cmp.Diff("pilot-x", wle.Annotations[workloadentrystore.WorkloadControllerAnnotation]); diff != "" {
+				t.Fatalf("WorkloadEntry should have been annotated with %q: %v", workloadentrystore.WorkloadControllerAnnotation, diff)
 			}
-			if diff := cmp.Diff(now.Format(time.RFC3339Nano), wle.Annotations[ConnectedAtAnnotation]); diff != "" {
-				t.Fatalf("WorkloadEntry should have been annotated with %q: %v", ConnectedAtAnnotation, diff)
+			if diff := cmp.Diff(now.Format(time.RFC3339Nano), wle.Annotations[workloadentrystore.ConnectedAtAnnotation]); diff != "" {
+				t.Fatalf("WorkloadEntry should have been annotated with %q: %v", workloadentrystore.ConnectedAtAnnotation, diff)
 			}
 		})
 	}
@@ -635,13 +637,13 @@ func checkEntry(
 
 	// check controller annotations
 	if connectedTo != "" {
-		if v := cfg.Annotations[WorkloadControllerAnnotation]; v != connectedTo {
+		if v := cfg.Annotations[workloadentrystore.WorkloadControllerAnnotation]; v != connectedTo {
 			err = multierror.Append(err, fmt.Errorf("expected WorkloadEntry to be updated by %s; got %s", connectedTo, v))
 		}
-		if _, ok := cfg.Annotations[ConnectedAtAnnotation]; !ok {
+		if _, ok := cfg.Annotations[workloadentrystore.ConnectedAtAnnotation]; !ok {
 			err = multierror.Append(err, fmt.Errorf("expected connection timestamp to be set"))
 		}
-	} else if _, ok := cfg.Annotations[DisconnectedAtAnnotation]; !ok {
+	} else if _, ok := cfg.Annotations[workloadentrystore.DisconnectedAtAnnotation]; !ok {
 		err = multierror.Append(err, fmt.Errorf("expected disconnection timestamp to be set"))
 	}
 
@@ -740,7 +742,7 @@ func checkEntryDisconnected(store model.ConfigStoreController, we config.Config)
 	if cfg == nil {
 		return fmt.Errorf("expected WorkloadEntry %s/%s to exist", we.Namespace, we.Name)
 	}
-	if _, ok := cfg.Annotations[DisconnectedAtAnnotation]; !ok {
+	if _, ok := cfg.Annotations[workloadentrystore.DisconnectedAtAnnotation]; !ok {
 		return fmt.Errorf("expected disconnection timestamp to be set on WorkloadEntry %s/%s: %#v", we.Namespace, we.Name, cfg)
 	}
 	return nil
@@ -756,13 +758,13 @@ func checkNonAutoRegisteredEntryOrFail(t test.Failer, store model.ConfigStoreCon
 
 	// check controller annotations
 	if connectedTo != "" {
-		if v := cfg.Annotations[WorkloadControllerAnnotation]; v != connectedTo {
+		if v := cfg.Annotations[workloadentrystore.WorkloadControllerAnnotation]; v != connectedTo {
 			t.Fatalf("expected WorkloadEntry to be updated by %s; got %s", connectedTo, v)
 		}
-		if _, ok := cfg.Annotations[ConnectedAtAnnotation]; !ok {
+		if _, ok := cfg.Annotations[workloadentrystore.ConnectedAtAnnotation]; !ok {
 			t.Fatalf("expected connection timestamp to be set")
 		}
-	} else if _, ok := cfg.Annotations[DisconnectedAtAnnotation]; !ok {
+	} else if _, ok := cfg.Annotations[workloadentrystore.DisconnectedAtAnnotation]; !ok {
 		t.Fatalf("expected disconnection timestamp to be set")
 	}
 }

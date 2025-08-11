@@ -71,9 +71,11 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
 
+	_ "github.com/envoyproxy/go-control-plane/envoy/admin/v3"
 	"google.golang.org/grpc/credentials"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	v3 "istio.io/istio/pilot/pkg/xds/v3"
+	_ "istio.io/istio/pkg/config/xds"
 	"istio.io/istio/pkg/env"
 	"istio.io/istio/pkg/log"
 	"istio.io/istio/pkg/util/protomarshal"
